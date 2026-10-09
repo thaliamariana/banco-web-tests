@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/thaliamariana/banco-web-tests#readme",
   "devDependencies": {
-    "cypress": "^16.1.1"
+    "cypress": "^16.1.1",
+    "cypress-mochawesome-reporter": "^5.0.0"
   }
 }
