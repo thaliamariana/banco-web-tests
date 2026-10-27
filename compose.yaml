@@ -1,0 +1,13 @@
+services:
+  cypress-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CYPRESS_baseUrl=http://host.docker.internal:4000
+    volumes:
+      - ./cypress/reports:/e2e/cypress/reports
+      - ./cypress/videos:/e2e/cypress/videos
+      - ./cypress/screenshots:/e2e/cypress/screenshots
