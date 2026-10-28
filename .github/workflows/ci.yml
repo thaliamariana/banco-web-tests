@@ -26,6 +26,12 @@ jobs:
           npm run rest-api &
         env:
           PORT: 3000
+          DB_HOST: localhost
+          DB_USER: root
+          DB_PASSWORD: 1234
+          DB_NAME: banco
+          JWT_SECRET: 1234
+          GRAPHQLPORT: 3001
 
       - name: Start Banco Web Frontend
         run: |
@@ -35,7 +41,7 @@ jobs:
           npm run server &
         env:
           PORT: 4000
-          REACT_APP_API_URL: http://localhost:3000
+          API_BASE_URL: http://localhost:3000
 
       - name: Wait for frontend to be ready
         run: |
