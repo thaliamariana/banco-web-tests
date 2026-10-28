@@ -9,6 +9,20 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 1234
+          MYSQL_DATABASE: banco
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -p1234"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout E2E tests repository
         uses: actions/checkout@v4
@@ -18,6 +32,42 @@ jobs:
         with:
           node-version: 18
 
+      - name: Initialize MySQL Database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p1234 banco << 'EOF'
+          CREATE TABLE IF NOT EXISTS contas (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              titular VARCHAR(100) NOT NULL,
+              saldo DECIMAL(10, 2) NOT NULL,
+              ativa BOOLEAN DEFAULT TRUE
+          );
+
+          CREATE TABLE IF NOT EXISTS transferencias (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              conta_origem_id INT NOT NULL,
+              conta_destino_id INT NOT NULL,
+              valor DECIMAL(10, 2) NOT NULL,
+              data_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+              autenticada BOOLEAN DEFAULT FALSE,
+              FOREIGN KEY (conta_origem_id) REFERENCES contas(id),
+              FOREIGN KEY (conta_destino_id) REFERENCES contas(id)
+          );
+
+          CREATE TABLE IF NOT EXISTS usuarios (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              username VARCHAR(50) NOT NULL UNIQUE,
+              senha VARCHAR(255) NOT NULL
+          );
+
+          INSERT INTO usuarios (username, senha) VALUES
+              ('julio.lima', '123456'),
+              ('junior.lima', '123456');
+
+          INSERT INTO contas (titular, saldo, ativa) VALUES
+              ('João da Silva', 10000.00, TRUE),
+              ('Maria Oliveira', 10000.00, TRUE);
+          EOF
+
       - name: Start Banco API
         run: |
           git clone https://github.com/juliodelimas/banco-api.git /tmp/banco-api
@@ -26,7 +76,7 @@ jobs:
           npm run rest-api &
         env:
           PORT: 3000
-          DB_HOST: localhost
+          DB_HOST: 127.0.0.1
           DB_USER: root
           DB_PASSWORD: 1234
           DB_NAME: banco
@@ -43,9 +93,9 @@ jobs:
           PORT: 4000
           API_BASE_URL: http://localhost:3000
 
-      - name: Wait for frontend to be ready
+      - name: Wait for services to be ready
         run: |
-          npx wait-on http://localhost:4000 --timeout 60000
+          npx wait-on http://localhost:3000/api-docs http://localhost:4000 --timeout 60000
 
       - name: Run E2E tests with Docker Compose
         run: |
