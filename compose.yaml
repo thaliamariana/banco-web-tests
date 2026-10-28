@@ -1,12 +1,26 @@
 services:
+  banco-api:
+    image: juliodelimas/banco-api:latest
+    ports:
+      - "3000:3000"
+
+  banco-web:
+    image: juliodelimas/banco-web:latest
+    ports:
+      - "4000:4000"
+    depends_on:
+      - banco-api
+    environment:
+      - REACT_APP_API_URL=http://banco-api:3000
+
   cypress-tests:
     build:
       context: .
       dockerfile: Dockerfile
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - banco-web
     environment:
-      - CYPRESS_baseUrl=http://host.docker.internal:4000
+      - CYPRESS_baseUrl=http://banco-web:4000
     volumes:
       - ./cypress/reports:/e2e/cypress/reports
       - ./cypress/videos:/e2e/cypress/videos
