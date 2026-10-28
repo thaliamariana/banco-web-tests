@@ -1,11 +1,11 @@
 services:
   banco-api:
-    image: juliodelimas/banco-api:latest
+    build: https://github.com/juliodelimas/banco-api.git
     ports:
       - "3000:3000"
 
   banco-web:
-    image: juliodelimas/banco-web:latest
+    build: https://github.com/juliodelimas/banco-web.git
     ports:
       - "4000:4000"
     depends_on:
