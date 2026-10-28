@@ -1,16 +1,45 @@
-name: E2E Regression Tests
+name: E2E Regression Tests (CI)
 
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout E2E tests repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Start Banco API
+        run: |
+          git clone https://github.com/juliodelimas/banco-api.git /tmp/banco-api
+          cd /tmp/banco-api
+          npm ci || npm install
+          npm run rest-api &
+        env:
+          PORT: 3000
+
+      - name: Start Banco Web Frontend
+        run: |
+          git clone https://github.com/juliodelimas/banco-web.git /tmp/banco-web
+          cd /tmp/banco-web
+          npm ci || npm install
+          npm run server &
+        env:
+          PORT: 4000
+          REACT_APP_API_URL: http://localhost:3000
+
+      - name: Wait for frontend to be ready
+        run: |
+          npx wait-on http://localhost:4000 --timeout 60000
 
       - name: Run E2E tests with Docker Compose
         run: |
@@ -30,4 +59,3 @@ jobs:
       - name: Tear down containers
         if: always()
         run: docker compose down -v
-  
