@@ -3,10 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    network_mode: "host"
     environment:
-      - CYPRESS_baseUrl=http://host.docker.internal:4000
+      - CYPRESS_baseUrl=http://localhost:4000
     volumes:
       - ./cypress/reports:/e2e/cypress/reports
       - ./cypress/videos:/e2e/cypress/videos
